@@ -1,4 +1,5 @@
 import { useState } from "react";
+import axios from "axios";
 
 export default function BuyorsellComponent({
   enabled,
@@ -8,6 +9,20 @@ export default function BuyorsellComponent({
   divEnabled,
 }) {
   const [quantity, SetQuantity] = useState(0);
+  async function updateBankBalance() {
+    const result = await axios.post("http://localhost:3000/AddMoneyToBank", {
+      username: "ShyamZ",
+      moneytoadd: quantity,
+    });
+    const resdata = result.data;
+    console.log(resdata);
+    console.log(resdata.BankBalance);
+    //updateusdt(usdtBalance + quantity);
+    updateusdt(resdata.BankBalance);
+    SetQuantity(0);
+    divEnabled(false);
+  }
+  async function BuyAssetHandler() {}
   return (
     enabled && (
       <div>
@@ -36,18 +51,17 @@ export default function BuyorsellComponent({
                   Sell
                 </button>
               ) : (
-                <button className="px-10 py-2 bg-green-600 text-white rounded-md">
+                <button
+                  className="px-10 py-2 bg-green-600 text-white rounded-md"
+                  onClick={BuyAssetHandler}
+                >
                   Buy
                 </button>
               )
             ) : (
               <button
                 className="px-10 py-2 bg-blue-600 text-white rounded-md"
-                onClick={() => {
-                  updateusdt(usdtBalance + quantity);
-                  SetQuantity(0);
-                  divEnabled(false);
-                }}
+                onClick={updateBankBalance}
               >
                 Add Money To Wallet
               </button>

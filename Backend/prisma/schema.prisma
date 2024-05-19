@@ -19,3 +19,10 @@ model userBankBalance{
   username String @unique
   BankBalance Float
 }
+
+model UserWallet{
+  Id Int @id @default(autoincrement())
+  username String @unique
+  BTCBalance Int
+  USDTBalance Float
+}

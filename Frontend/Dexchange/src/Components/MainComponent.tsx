@@ -1,12 +1,26 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BuyorsellComponent from "./BuyorSellComponent";
+import axios from "axios";
 
 export default function MainComponent() {
-  const [btcBalance, UpdatebtcBalance] = useState(100);
-  const [usdtBalance, UpdateusdtBalance] = useState(100);
+  const [btcBalance, UpdatebtcBalance] = useState(0);
+  const [usdtBalance, UpdateusdtBalance] = useState(0);
   const [buyorsellenabled, SetEnabled] = useState(false);
   const [addMoneyEnabled, SetAddMoneyEnabled] = useState(false);
   const [buyorsell, SetBuyorSell] = useState("");
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      const result = await axios.get("http://localhost:3000/getUsdtBalance", {
+        params: {
+          username: "ShyamZ",
+        },
+      });
+      const resdata = result.data;
+      UpdateusdtBalance(resdata.BankBalance);
+    };
+    fetchBalance();
+  }, [UpdateusdtBalance]);
   return (
     <div>
       <div>

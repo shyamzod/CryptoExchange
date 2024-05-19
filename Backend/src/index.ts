@@ -17,6 +17,11 @@ interface AddMoneyToBank {
   username: string;
   moneytoadd: number;
 }
+interface BuyorSellAsset {
+  username: string;
+  BTC: number;
+  USDT: number;
+}
 
 async function InsertNewUser(userdata: user) {
   try {
@@ -49,13 +54,100 @@ async function UpdateBankBalane(user: AddMoneyToBank) {
       existingBalance?.BankBalance == null
         ? user.moneytoadd
         : existingBalance.BankBalance + user.moneytoadd;
-    await dbclient.userBankBalance.update({
+    const result = await dbclient.userBankBalance.update({
       where: {
         username: user.username,
       },
       data: { BankBalance: newBalance },
+      select: {
+        BankBalance: true,
+      },
     });
-    return true;
+    return result;
+  } catch {}
+}
+
+async function GetUserBalance(username: any) {
+  try {
+    console.log(username);
+    const result = await dbclient.userBankBalance.findFirst({
+      where: {
+        username,
+      },
+      select: {
+        BankBalance: true,
+      },
+    });
+    console.log("This is userbalance" + result);
+    return result?.BankBalance;
+  } catch {}
+}
+
+async function CreateWallet(username: string) {
+  try {
+    const result = await dbclient.userWallet.create({
+      data: { username: username, BTCBalance: 0, USDTBalance: 0.0 },
+    });
+  } catch {}
+}
+
+async function BuyAsset(datatoupdate: BuyorSellAsset) {
+  try {
+    const existingvalues = await dbclient.userWallet.findFirst({
+      where: {
+        username: datatoupdate.username,
+      },
+      select: {
+        BTCBalance: true,
+        USDTBalance: true,
+      },
+    });
+    const result = await dbclient.userWallet.update({
+      where: {
+        username: datatoupdate.username,
+      },
+      data: {
+        BTCBalance:
+          existingvalues?.BTCBalance === undefined
+            ? datatoupdate.BTC
+            : existingvalues?.BTCBalance + datatoupdate.BTC,
+        USDTBalance:
+          existingvalues?.USDTBalance === undefined
+            ? existingvalues?.USDTBalance
+            : existingvalues.USDTBalance - datatoupdate.BTC * 100,
+      },
+    });
+    return result;
+  } catch {}
+}
+
+async function SellAsset(datatoupdate: BuyorSellAsset) {
+  try {
+    const existingvalues = await dbclient.userWallet.findFirst({
+      where: {
+        username: datatoupdate.username,
+      },
+      select: {
+        BTCBalance: true,
+        USDTBalance: true,
+      },
+    });
+    const result = await dbclient.userWallet.update({
+      where: {
+        username: datatoupdate.username,
+      },
+      data: {
+        BTCBalance:
+          existingvalues?.BTCBalance === undefined
+            ? existingvalues?.BTCBalance
+            : existingvalues?.BTCBalance - datatoupdate.BTC,
+        USDTBalance:
+          existingvalues?.USDTBalance === undefined
+            ? existingvalues?.USDTBalance
+            : existingvalues?.USDTBalance + datatoupdate.BTC * 100,
+      },
+    });
+    return result;
   } catch {}
 }
 
@@ -63,9 +155,11 @@ app.post("/AddMoneyToBank", async (req, res) => {
   const body = req.body;
   console.log(body);
   const result = await UpdateBankBalane(body);
+  console.log(result);
   if (result) {
     res.status(200).json({
       message: "Money added to Bank Account",
+      BankBalance: result.BankBalance,
     });
   } else {
     res.status(411).json({ message: "Adding Money Failed to Bank Account" });
@@ -75,7 +169,30 @@ app.post("/AddMoneyToBank", async (req, res) => {
 app.post("/CreateBankAccount", async (req, res) => {
   const body = req.body;
   await InsertNewUser(body);
+  await CreateWallet(body.username);
   res.status(200).json({ message: "New User Created" });
+});
+
+app.get("/getUsdtBalance", async (req, res) => {
+  const username = req.query.username;
+  console.log(username);
+  const result = await GetUserBalance(username);
+  console.log(result);
+  res
+    .status(200)
+    .json({ message: "User Balance Fetched", BankBalance: result });
+});
+
+app.post("/BuyAsset", async (req, res) => {
+  const body = req.body;
+  const result = await BuyAsset(body);
+  res.status(200).send({ message: "Assets Updated in db" });
+});
+
+app.post("/SellAsset", async (req, res) => {
+  const body = req.body;
+  const result = await SellAsset(body);
+  res.status(200).send({ message: "Assets Sold are updated in db" });
 });
 
 app.listen(3000, () => {
