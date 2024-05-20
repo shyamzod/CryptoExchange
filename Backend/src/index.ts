@@ -25,7 +25,6 @@ interface BuyorSellAsset {
 
 async function InsertNewUser(userdata: user) {
   try {
-    console.log(userdata);
     if (userdata != undefined || userdata != null) {
       const result = await dbclient.userBankBalance.create({
         data: {
@@ -151,6 +150,54 @@ async function SellAsset(datatoupdate: BuyorSellAsset) {
   } catch {}
 }
 
+async function AddMoneyToWallet(userdata: AddMoneyToBank) {
+  try {
+    const existingBalance = await dbclient.userBankBalance.findFirst({
+      where: {
+        username: userdata.username,
+      },
+      select: {
+        BankBalance: true,
+      },
+    });
+    if (
+      existingBalance?.BankBalance != undefined &&
+      existingBalance?.BankBalance >= userdata.moneytoadd
+    ) {
+      const existingwalletbalance = await dbclient.userWallet.findFirst({
+        where: {
+          username: userdata.username,
+        },
+        select: {
+          USDTBalance: true,
+        },
+      });
+      const walletupdate = await dbclient.userWallet.update({
+        where: {
+          username: userdata.username,
+        },
+        data: {
+          USDTBalance:
+            existingwalletbalance?.USDTBalance === undefined
+              ? userdata.moneytoadd
+              : existingwalletbalance.USDTBalance + userdata.moneytoadd,
+        },
+      });
+      const bankbalanceupdate = await dbclient.userBankBalance.update({
+        where: {
+          username: userdata.username,
+        },
+        data: {
+          BankBalance: existingBalance.BankBalance - userdata.moneytoadd,
+        },
+      });
+      return true;
+    } else {
+      return false;
+    }
+  } catch {}
+}
+
 app.post("/AddMoneyToBank", async (req, res) => {
   const body = req.body;
   console.log(body);
@@ -163,6 +210,16 @@ app.post("/AddMoneyToBank", async (req, res) => {
     });
   } else {
     res.status(411).json({ message: "Adding Money Failed to Bank Account" });
+  }
+});
+
+app.post("/AddMoneyToWallet", async (req, res) => {
+  const body = req.body;
+  const result = await AddMoneyToWallet(body);
+  if (result) {
+    res.status(200).json({ message: "Added Money to Wallet from BankAccount" });
+  } else {
+    res.status(200).json({ message: "Insufficient Balance" });
   }
 });
 

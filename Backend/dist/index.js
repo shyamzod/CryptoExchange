@@ -22,7 +22,6 @@ const dbclient = new client_1.PrismaClient();
 function InsertNewUser(userdata) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log(userdata);
             if (userdata != undefined || userdata != null) {
                 const result = yield dbclient.userBankBalance.create({
                     data: {
@@ -154,6 +153,54 @@ function SellAsset(datatoupdate) {
         catch (_a) { }
     });
 }
+function AddMoneyToWallet(userdata) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const existingBalance = yield dbclient.userBankBalance.findFirst({
+                where: {
+                    username: userdata.username,
+                },
+                select: {
+                    BankBalance: true,
+                },
+            });
+            if ((existingBalance === null || existingBalance === void 0 ? void 0 : existingBalance.BankBalance) != undefined &&
+                (existingBalance === null || existingBalance === void 0 ? void 0 : existingBalance.BankBalance) >= userdata.moneytoadd) {
+                const existingwalletbalance = yield dbclient.userWallet.findFirst({
+                    where: {
+                        username: userdata.username,
+                    },
+                    select: {
+                        USDTBalance: true,
+                    },
+                });
+                const walletupdate = yield dbclient.userWallet.update({
+                    where: {
+                        username: userdata.username,
+                    },
+                    data: {
+                        USDTBalance: (existingwalletbalance === null || existingwalletbalance === void 0 ? void 0 : existingwalletbalance.USDTBalance) === undefined
+                            ? userdata.moneytoadd
+                            : existingwalletbalance.USDTBalance + userdata.moneytoadd,
+                    },
+                });
+                const bankbalanceupdate = yield dbclient.userBankBalance.update({
+                    where: {
+                        username: userdata.username,
+                    },
+                    data: {
+                        BankBalance: existingBalance.BankBalance - userdata.moneytoadd,
+                    },
+                });
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        catch (_a) { }
+    });
+}
 app.post("/AddMoneyToBank", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const body = req.body;
     console.log(body);
@@ -167,6 +214,16 @@ app.post("/AddMoneyToBank", (req, res) => __awaiter(void 0, void 0, void 0, func
     }
     else {
         res.status(411).json({ message: "Adding Money Failed to Bank Account" });
+    }
+}));
+app.post("/AddMoneyToWallet", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const body = req.body;
+    const result = yield AddMoneyToWallet(body);
+    if (result) {
+        res.status(200).json({ message: "Added Money to Wallet from BankAccount" });
+    }
+    else {
+        res.status(200).json({ message: "Insufficient Balance" });
     }
 }));
 app.post("/CreateBankAccount", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
