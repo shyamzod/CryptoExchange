@@ -15,11 +15,11 @@ export default function BuyorsellComponent({
       moneytoadd: quantity,
     });
     const resdata = result.data;
-    //updateusdt(usdtBalance + quantity);
     updateusdt(resdata.WalletUSDT);
     SetQuantity(0);
     divEnabled(false);
   }
+  async function withdrawmoney() {}
   async function BuyAssetHandler() {}
   return (
     enabled && (
@@ -56,12 +56,19 @@ export default function BuyorsellComponent({
                   Buy
                 </button>
               )
-            ) : (
+            ) : mode == "AddMoney" ? (
               <button
                 className="px-10 py-2 bg-blue-600 text-white rounded-md"
                 onClick={updateBankBalance}
               >
                 Add Money To Wallet
+              </button>
+            ) : (
+              <button
+                className="px-10 py-2 bg-blue-600 text-white rounded-md"
+                onClick={withdrawmoney}
+              >
+                Withdraw Money From Wallet
               </button>
             )}
           </div>

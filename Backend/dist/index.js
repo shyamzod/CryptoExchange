@@ -201,6 +201,50 @@ function AddMoneyToWallet(userdata) {
         catch (_a) { }
     });
 }
+function Withdrawmoneyfromwallet(userdata) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const existingvalues = yield dbclient.userWallet.findFirst({
+                where: {
+                    username: userdata.username,
+                },
+                select: {
+                    USDTBalance: true,
+                },
+            });
+            const existinguserbankbalance = yield dbclient.userBankBalance.findFirst({
+                where: {
+                    username: userdata.username,
+                },
+                select: {
+                    BankBalance: true,
+                },
+            });
+            if ((existingvalues === null || existingvalues === void 0 ? void 0 : existingvalues.USDTBalance) != undefined &&
+                (existinguserbankbalance === null || existinguserbankbalance === void 0 ? void 0 : existinguserbankbalance.BankBalance) != undefined &&
+                existingvalues.USDTBalance >= userdata.moneytoadd) {
+                const walletresult = yield dbclient.userWallet.update({
+                    where: {
+                        username: userdata.username,
+                    },
+                    data: {
+                        USDTBalance: existingvalues.USDTBalance - userdata.moneytoadd,
+                    },
+                });
+                const bankbalanceresult = yield dbclient.userBankBalance.update({
+                    where: {
+                        username: userdata.username,
+                    },
+                    data: {
+                        BankBalance: existinguserbankbalance.BankBalance + userdata.moneytoadd,
+                    },
+                });
+                return walletresult;
+            }
+        }
+        catch (_a) { }
+    });
+}
 app.post("/AddMoneyToBank", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const body = req.body;
     console.log(body);
@@ -227,6 +271,16 @@ app.post("/AddMoneyToWallet", (req, res) => __awaiter(void 0, void 0, void 0, fu
     }
     else {
         res.status(200).json({ message: "Insufficient Balance" });
+    }
+}));
+app.post("/Withdrawmoneyfromwallet", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const body = req.body;
+    const result = yield Withdrawmoneyfromwallet(body);
+    if (result) {
+        res.status(200).json({
+            message: "Money withdrawn from balance",
+            walletbalance: result.USDTBalance,
+        });
     }
 }));
 app.post("/CreateBankAccount", (req, res) => __awaiter(void 0, void 0, void 0, function* () {

@@ -197,6 +197,53 @@ async function AddMoneyToWallet(userdata: AddMoneyToBank) {
     }
   } catch {}
 }
+async function Withdrawmoneyfromwallet(userdata: AddMoneyToBank) {
+  try {
+    const existingvalues = await dbclient.userWallet.findFirst({
+      where: {
+        username: userdata.username,
+      },
+      select: {
+        USDTBalance: true,
+      },
+    });
+
+    const existinguserbankbalance = await dbclient.userBankBalance.findFirst({
+      where: {
+        username: userdata.username,
+      },
+      select: {
+        BankBalance: true,
+      },
+    });
+
+    if (
+      existingvalues?.USDTBalance != undefined &&
+      existinguserbankbalance?.BankBalance != undefined &&
+      existingvalues.USDTBalance >= userdata.moneytoadd
+    ) {
+      const walletresult = await dbclient.userWallet.update({
+        where: {
+          username: userdata.username,
+        },
+        data: {
+          USDTBalance: existingvalues.USDTBalance - userdata.moneytoadd,
+        },
+      });
+
+      const bankbalanceresult = await dbclient.userBankBalance.update({
+        where: {
+          username: userdata.username,
+        },
+        data: {
+          BankBalance:
+            existinguserbankbalance.BankBalance + userdata.moneytoadd,
+        },
+      });
+      return walletresult;
+    }
+  } catch {}
+}
 
 app.post("/AddMoneyToBank", async (req, res) => {
   const body = req.body;
@@ -223,6 +270,16 @@ app.post("/AddMoneyToWallet", async (req, res) => {
     });
   } else {
     res.status(200).json({ message: "Insufficient Balance" });
+  }
+});
+app.post("/Withdrawmoneyfromwallet", async (req, res) => {
+  const body = req.body;
+  const result = await Withdrawmoneyfromwallet(body);
+  if (result) {
+    res.status(200).json({
+      message: "Money withdrawn from balance",
+      walletbalance: result.USDTBalance,
+    });
   }
 });
 
