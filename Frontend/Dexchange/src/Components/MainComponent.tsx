@@ -17,7 +17,7 @@ export default function MainComponent() {
         },
       });
       const resdata = result.data;
-      UpdateusdtBalance(resdata.BankBalance);
+      UpdateusdtBalance(resdata.WalletUSDT);
     };
     fetchBalance();
   }, [UpdateusdtBalance]);

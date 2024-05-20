@@ -10,15 +10,13 @@ export default function BuyorsellComponent({
 }) {
   const [quantity, SetQuantity] = useState(0);
   async function updateBankBalance() {
-    const result = await axios.post("http://localhost:3000/AddMoneyToBank", {
-      username: "ShyamZ",
+    const result = await axios.post("http://localhost:3000/AddMoneyToWallet", {
+      username: "Ramdas",
       moneytoadd: quantity,
     });
     const resdata = result.data;
-    console.log(resdata);
-    console.log(resdata.BankBalance);
     //updateusdt(usdtBalance + quantity);
-    updateusdt(resdata.BankBalance);
+    updateusdt(resdata.WalletUSDT);
     SetQuantity(0);
     divEnabled(false);
   }

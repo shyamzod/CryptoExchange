@@ -191,7 +191,7 @@ async function AddMoneyToWallet(userdata: AddMoneyToBank) {
           BankBalance: existingBalance.BankBalance - userdata.moneytoadd,
         },
       });
-      return true;
+      return walletupdate;
     } else {
       return false;
     }
@@ -217,7 +217,10 @@ app.post("/AddMoneyToWallet", async (req, res) => {
   const body = req.body;
   const result = await AddMoneyToWallet(body);
   if (result) {
-    res.status(200).json({ message: "Added Money to Wallet from BankAccount" });
+    res.status(200).json({
+      message: "Added Money to Wallet from BankAccount",
+      WalletUSDT: result.USDTBalance,
+    });
   } else {
     res.status(200).json({ message: "Insufficient Balance" });
   }
