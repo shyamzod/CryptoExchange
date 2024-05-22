@@ -33,9 +33,7 @@ function InsertNewUser(userdata) {
                 return result.Id;
             }
         }
-        catch (_a) {
-            console.log("Error Occured while adding user in db");
-        }
+        catch (_a) { }
     });
 }
 function UpdateBankBalane(user) {
@@ -68,7 +66,6 @@ function UpdateBankBalane(user) {
 function GetUserBalance(username) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log(username);
             const result = yield dbclient.userBankBalance.findFirst({
                 where: {
                     username,
@@ -77,8 +74,24 @@ function GetUserBalance(username) {
                     BankBalance: true,
                 },
             });
-            console.log("This is userbalance" + result);
             return result === null || result === void 0 ? void 0 : result.BankBalance;
+        }
+        catch (_a) { }
+    });
+}
+function GetWalletBalance(username) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const result = yield dbclient.userWallet.findFirst({
+                where: {
+                    username,
+                },
+                select: {
+                    USDTBalance: true,
+                    BTCBalance: true,
+                },
+            });
+            return result;
         }
         catch (_a) { }
     });
@@ -247,9 +260,7 @@ function Withdrawmoneyfromwallet(userdata) {
 }
 app.post("/AddMoneyToBank", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const body = req.body;
-    console.log(body);
     const result = yield UpdateBankBalane(body);
-    console.log(result);
     if (result) {
         res.status(200).json({
             message: "Money added to Bank Account",
@@ -289,24 +300,39 @@ app.post("/CreateBankAccount", (req, res) => __awaiter(void 0, void 0, void 0, f
     yield CreateWallet(body.username);
     res.status(200).json({ message: "New User Created" });
 }));
-app.get("/getUsdtBalance", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+app.get("/getUserBalance", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const username = req.query.username;
-    console.log(username);
     const result = yield GetUserBalance(username);
-    console.log(result);
     res
         .status(200)
         .json({ message: "User Balance Fetched", BankBalance: result });
 }));
+app.get("/getwalletbalance", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const username = req.query.username;
+    const result = yield GetWalletBalance(username);
+    res.status(200).json({
+        message: "User Wallet Usdt Fetched",
+        WalletUsdt: result === null || result === void 0 ? void 0 : result.USDTBalance,
+        walletBTC: result === null || result === void 0 ? void 0 : result.BTCBalance,
+    });
+}));
 app.post("/BuyAsset", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const body = req.body;
     const result = yield BuyAsset(body);
-    res.status(200).send({ message: "Assets Updated in db" });
+    res.status(200).send({
+        message: "Assets Updated in db",
+        BTC: result === null || result === void 0 ? void 0 : result.BTCBalance,
+        USDT: result === null || result === void 0 ? void 0 : result.USDTBalance,
+    });
 }));
 app.post("/SellAsset", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const body = req.body;
     const result = yield SellAsset(body);
-    res.status(200).send({ message: "Assets Sold are updated in db" });
+    res.status(200).send({
+        message: "Assets Sold are updated in db",
+        BTC: result === null || result === void 0 ? void 0 : result.BTCBalance,
+        USDT: result === null || result === void 0 ? void 0 : result.USDTBalance,
+    });
 }));
 app.listen(3000, () => {
     console.log("App is running");

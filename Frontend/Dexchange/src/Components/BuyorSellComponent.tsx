@@ -7,20 +7,50 @@ export default function BuyorsellComponent({
   updateusdt,
   usdtBalance,
   divEnabled,
+  updatebtc,
 }) {
   const [quantity, SetQuantity] = useState(0);
-  async function updateBankBalance() {
+  async function AddMoneytoWallet() {
     const result = await axios.post("http://localhost:3000/AddMoneyToWallet", {
       username: "Ramdas",
       moneytoadd: quantity,
     });
     const resdata = result.data;
     updateusdt(resdata.WalletUSDT);
-    SetQuantity(0);
     divEnabled(false);
   }
-  async function withdrawmoney() {}
-  async function BuyAssetHandler() {}
+  async function withdrawmoney() {
+    const result = await axios.post(
+      "http://localhost:3000/Withdrawmoneyfromwallet",
+      {
+        username: "Ramdas",
+        moneytoadd: quantity,
+      }
+    );
+    const data = result.data;
+    updateusdt(data.walletbalance);
+    divEnabled(false);
+  }
+  async function BuyAssetHandler() {
+    const result = await axios.post("http://localhost:3000/BuyAsset", {
+      username: "Ramdas",
+      BTC: quantity,
+    });
+    const data = result.data;
+    updateusdt(data.USDT);
+    updatebtc(data.BTC);
+    divEnabled(false);
+  }
+  async function sellAssetHandler() {
+    const result = await axios.post("http://localhost:3000/SellAsset", {
+      username: "Ramdas",
+      BTC: quantity,
+    });
+    const data = result.data;
+    updateusdt(data.USDT);
+    updatebtc(data.BTC);
+    divEnabled(false);
+  }
   return (
     enabled && (
       <div>
@@ -45,7 +75,10 @@ export default function BuyorsellComponent({
           <div className="flex justify-center">
             {mode == "Sell" || mode === "Buy" ? (
               mode === "Sell" ? (
-                <button className="px-10 py-2 bg-red-600 text-white rounded-md">
+                <button
+                  className="px-10 py-2 bg-red-600 text-white rounded-md"
+                  onClick={sellAssetHandler}
+                >
                   Sell
                 </button>
               ) : (
@@ -59,7 +92,7 @@ export default function BuyorsellComponent({
             ) : mode == "AddMoney" ? (
               <button
                 className="px-10 py-2 bg-blue-600 text-white rounded-md"
-                onClick={updateBankBalance}
+                onClick={AddMoneytoWallet}
               >
                 Add Money To Wallet
               </button>

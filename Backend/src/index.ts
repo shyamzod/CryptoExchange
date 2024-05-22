@@ -20,7 +20,6 @@ interface AddMoneyToBank {
 interface BuyorSellAsset {
   username: string;
   BTC: number;
-  USDT: number;
 }
 
 async function InsertNewUser(userdata: user) {
@@ -35,9 +34,7 @@ async function InsertNewUser(userdata: user) {
       });
       return result.Id;
     }
-  } catch {
-    console.log("Error Occured while adding user in db");
-  }
+  } catch {}
 }
 
 async function UpdateBankBalane(user: AddMoneyToBank) {
@@ -68,7 +65,6 @@ async function UpdateBankBalane(user: AddMoneyToBank) {
 
 async function GetUserBalance(username: any) {
   try {
-    console.log(username);
     const result = await dbclient.userBankBalance.findFirst({
       where: {
         username,
@@ -77,11 +73,23 @@ async function GetUserBalance(username: any) {
         BankBalance: true,
       },
     });
-    console.log("This is userbalance" + result);
     return result?.BankBalance;
   } catch {}
 }
-
+async function GetWalletBalance(username: any) {
+  try {
+    const result = await dbclient.userWallet.findFirst({
+      where: {
+        username,
+      },
+      select: {
+        USDTBalance: true,
+        BTCBalance: true,
+      },
+    });
+    return result;
+  } catch {}
+}
 async function CreateWallet(username: string) {
   try {
     const result = await dbclient.userWallet.create({
@@ -247,9 +255,7 @@ async function Withdrawmoneyfromwallet(userdata: AddMoneyToBank) {
 
 app.post("/AddMoneyToBank", async (req, res) => {
   const body = req.body;
-  console.log(body);
   const result = await UpdateBankBalane(body);
-  console.log(result);
   if (result) {
     res.status(200).json({
       message: "Money added to Bank Account",
@@ -290,26 +296,42 @@ app.post("/CreateBankAccount", async (req, res) => {
   res.status(200).json({ message: "New User Created" });
 });
 
-app.get("/getUsdtBalance", async (req, res) => {
+app.get("/getUserBalance", async (req, res) => {
   const username = req.query.username;
-  console.log(username);
   const result = await GetUserBalance(username);
-  console.log(result);
   res
     .status(200)
     .json({ message: "User Balance Fetched", BankBalance: result });
 });
 
+app.get("/getwalletbalance", async (req, res) => {
+  const username = req.query.username;
+  const result = await GetWalletBalance(username);
+  res.status(200).json({
+    message: "User Wallet Usdt Fetched",
+    WalletUsdt: result?.USDTBalance,
+    walletBTC: result?.BTCBalance,
+  });
+});
+
 app.post("/BuyAsset", async (req, res) => {
   const body = req.body;
   const result = await BuyAsset(body);
-  res.status(200).send({ message: "Assets Updated in db" });
+  res.status(200).send({
+    message: "Assets Updated in db",
+    BTC: result?.BTCBalance,
+    USDT: result?.USDTBalance,
+  });
 });
 
 app.post("/SellAsset", async (req, res) => {
   const body = req.body;
   const result = await SellAsset(body);
-  res.status(200).send({ message: "Assets Sold are updated in db" });
+  res.status(200).send({
+    message: "Assets Sold are updated in db",
+    BTC: result?.BTCBalance,
+    USDT: result?.USDTBalance,
+  });
 });
 
 app.listen(3000, () => {

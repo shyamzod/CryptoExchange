@@ -11,16 +11,17 @@ export default function MainComponent() {
 
   useEffect(() => {
     const fetchBalance = async () => {
-      const result = await axios.get("http://localhost:3000/getUsdtBalance", {
+      const result = await axios.get("http://localhost:3000/getwalletbalance", {
         params: {
-          username: "ShyamZ",
+          username: "Ramdas",
         },
       });
       const resdata = result.data;
-      UpdateusdtBalance(resdata.WalletUSDT);
+      UpdateusdtBalance(resdata.WalletUsdt);
+      UpdatebtcBalance(resdata.walletBTC);
     };
     fetchBalance();
-  }, [UpdateusdtBalance]);
+  }, [usdtBalance, btcBalance]);
   return (
     <div>
       <div>
@@ -82,6 +83,7 @@ export default function MainComponent() {
           updateusdt={UpdateusdtBalance}
           usdtBalance={usdtBalance}
           divEnabled={SetEnabled}
+          updatebtc={UpdatebtcBalance}
         />
       </div>
     </div>
