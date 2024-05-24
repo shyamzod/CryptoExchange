@@ -1,15 +1,23 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 
-export default function BuyorsellComponent({
+interface BuyorSellComponentProps {
+  enabled: boolean;
+  mode: "" | "Buy" | "Sell" | "AddMoney" | "Withdraw";
+  updateusdt: (amount: number) => void;
+  divEnabled: (enabled: boolean) => void;
+  updatebtc: (amount: number) => void;
+}
+
+const BuyorSellComponent: React.FC<BuyorSellComponentProps> = ({
   enabled,
   mode,
   updateusdt,
-  usdtBalance,
   divEnabled,
   updatebtc,
-}) {
+}) => {
   const [quantity, SetQuantity] = useState(0);
+
   async function AddMoneytoWallet() {
     const result = await axios.post("http://localhost:3000/AddMoneyToWallet", {
       username: "Ramdas",
@@ -19,6 +27,7 @@ export default function BuyorsellComponent({
     updateusdt(resdata.WalletUSDT);
     divEnabled(false);
   }
+
   async function withdrawmoney() {
     const result = await axios.post(
       "http://localhost:3000/Withdrawmoneyfromwallet",
@@ -31,6 +40,7 @@ export default function BuyorsellComponent({
     updateusdt(data.walletbalance);
     divEnabled(false);
   }
+
   async function BuyAssetHandler() {
     const result = await axios.post("http://localhost:3000/BuyAsset", {
       username: "Ramdas",
@@ -41,6 +51,7 @@ export default function BuyorsellComponent({
     updatebtc(data.BTC);
     divEnabled(false);
   }
+
   async function sellAssetHandler() {
     const result = await axios.post("http://localhost:3000/SellAsset", {
       username: "Ramdas",
@@ -51,6 +62,7 @@ export default function BuyorsellComponent({
     updatebtc(data.BTC);
     divEnabled(false);
   }
+
   return (
     enabled && (
       <div>
@@ -68,12 +80,12 @@ export default function BuyorsellComponent({
               placeholder="Enter Quantity"
               className="block p-2 text-black border rounded-lg border-black"
               onChange={(e) => {
-                SetQuantity(parseInt(e.target.value));
+                SetQuantity(parseInt(e.target.value, 10));
               }}
             ></input>
           </div>
           <div className="flex justify-center">
-            {mode == "Sell" || mode === "Buy" ? (
+            {mode === "Sell" || mode === "Buy" ? (
               mode === "Sell" ? (
                 <button
                   className="px-10 py-2 bg-red-600 text-white rounded-md"
@@ -89,7 +101,7 @@ export default function BuyorsellComponent({
                   Buy
                 </button>
               )
-            ) : mode == "AddMoney" ? (
+            ) : mode === "AddMoney" ? (
               <button
                 className="px-10 py-2 bg-blue-600 text-white rounded-md"
                 onClick={AddMoneytoWallet}
@@ -109,4 +121,6 @@ export default function BuyorsellComponent({
       </div>
     )
   );
-}
+};
+
+export default BuyorSellComponent;

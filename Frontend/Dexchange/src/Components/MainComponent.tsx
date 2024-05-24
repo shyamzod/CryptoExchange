@@ -1,27 +1,36 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import BuyorsellComponent from "./BuyorSellComponent";
 import axios from "axios";
 
-export default function MainComponent() {
-  const [btcBalance, UpdatebtcBalance] = useState(0);
-  const [usdtBalance, UpdateusdtBalance] = useState(0);
-  const [buyorsellenabled, SetEnabled] = useState(false);
-  const [addMoneyEnabled, SetAddMoneyEnabled] = useState(false);
-  const [buyorsell, SetBuyorSell] = useState("");
+const MainComponent: React.FC = () => {
+  const [btcBalance, UpdatebtcBalance] = useState<number>(0);
+  const [usdtBalance, UpdateusdtBalance] = useState<number>(0);
+  const [buyorsellenabled, SetEnabled] = useState<boolean>(false);
+  const [buyorsell, SetBuyorSell] = useState<
+    "Buy" | "Sell" | "AddMoney" | "Withdraw" | ""
+  >("");
 
   useEffect(() => {
     const fetchBalance = async () => {
-      const result = await axios.get("http://localhost:3000/getwalletbalance", {
-        params: {
-          username: "Ramdas",
-        },
-      });
-      const resdata = result.data;
-      UpdateusdtBalance(resdata.WalletUsdt);
-      UpdatebtcBalance(resdata.walletBTC);
+      try {
+        const result = await axios.get(
+          "http://localhost:3000/getwalletbalance",
+          {
+            params: {
+              username: "Ramdas",
+            },
+          }
+        );
+        const resdata = result.data;
+        UpdateusdtBalance(resdata.WalletUsdt);
+        UpdatebtcBalance(resdata.walletBTC);
+      } catch (error) {
+        console.error("Error fetching balance:", error);
+      }
     };
     fetchBalance();
-  }, [usdtBalance, btcBalance]);
+  }, []);
+
   return (
     <div>
       <div>
@@ -29,14 +38,13 @@ export default function MainComponent() {
           <div className="px-20 py-16 bg-gray-800 text-white rounded-2xl">
             <h3>BTC Balance : {btcBalance}</h3>
           </div>
-          <div className="px-20 py-10  bg-gray-800 text-white rounded-2xl">
-            <h3 className=" text-center">USDT Balance : {usdtBalance}</h3>
-            <div className=" space-x-3">
+          <div className="px-20 py-10 bg-gray-800 text-white rounded-2xl">
+            <h3 className="text-center">USDT Balance : {usdtBalance}</h3>
+            <div className="space-x-3">
               <button
                 className="px-10 py-2 bg-blue-600 text-white rounded-md mt-2"
                 onClick={() => {
                   SetEnabled(true);
-                  SetAddMoneyEnabled(true);
                   SetBuyorSell("AddMoney");
                 }}
               >
@@ -46,7 +54,6 @@ export default function MainComponent() {
                 className="px-10 py-2 bg-yellow-400 text-black rounded-md mt-2"
                 onClick={() => {
                   SetEnabled(true);
-                  SetAddMoneyEnabled(true);
                   SetBuyorSell("Withdraw");
                 }}
               >
@@ -57,7 +64,7 @@ export default function MainComponent() {
         </div>
         <div className="flex flex-row items-center justify-center mt-10 space-x-10">
           <button
-            className=" px-20 py-2 bg-green-600 text-white rounded-md"
+            className="px-20 py-2 bg-green-600 text-white rounded-md"
             onClick={() => {
               SetEnabled(true);
               SetBuyorSell("Buy");
@@ -66,7 +73,7 @@ export default function MainComponent() {
             Buy
           </button>
           <button
-            className="px-20 py-2 bg-red-600  text-white rounded-md"
+            className="px-20 py-2 bg-red-600 text-white rounded-md"
             onClick={() => {
               SetEnabled(true);
               SetBuyorSell("Sell");
@@ -81,11 +88,12 @@ export default function MainComponent() {
           enabled={buyorsellenabled}
           mode={buyorsell}
           updateusdt={UpdateusdtBalance}
-          usdtBalance={usdtBalance}
           divEnabled={SetEnabled}
           updatebtc={UpdatebtcBalance}
         />
       </div>
     </div>
   );
-}
+};
+
+export default MainComponent;

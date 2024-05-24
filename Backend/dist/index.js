@@ -334,6 +334,6 @@ app.post("/SellAsset", (req, res) => __awaiter(void 0, void 0, void 0, function*
         USDT: result === null || result === void 0 ? void 0 : result.USDTBalance,
     });
 }));
-app.listen(3000, () => {
+app.listen(4000, () => {
     console.log("App is running");
 });
